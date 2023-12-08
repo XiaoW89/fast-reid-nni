@@ -21,6 +21,7 @@ def build_transforms(cfg, is_train=True):
         crop_size = cfg.INPUT.CROP.SIZE
         crop_scale = cfg.INPUT.CROP.SCALE
         crop_ratio = cfg.INPUT.CROP.RATIO
+        crop_prob = cfg.INPUT.CROP.PROB
 
         # augmix augmentation
         do_augmix = cfg.INPUT.AUGMIX.ENABLED
@@ -60,16 +61,20 @@ def build_transforms(cfg, is_train=True):
         rpt_prob = cfg.INPUT.RPT.PROB
 
         if do_autoaug:
-            res.append(T.RandomApply([AutoAugment()], p=autoaug_prob))
-
-        if size_train[0] > 0:
-            res.append(T.Resize(size_train[0] if len(size_train) == 1 else size_train, interpolation=3))
+            res.append(T.RandomApply([AutoAugment('reid')], p=autoaug_prob))
 
         if do_crop:
-            res.append(T.RandomResizedCrop(size=crop_size[0] if len(crop_size) == 1 else crop_size,
-                                           interpolation=3,
-                                           scale=crop_scale, ratio=crop_ratio))
-        if do_pad:
+            # if crop, do crop first
+            res.append(RandomCropForBody(crop_prob))
+
+        if size_train[0] > 0:
+            res.append(T.Resize(size_train[0] if len(size_train) == 1 else size_train, interpolation=2))
+
+#        if do_crop:
+#            res.append(T.RandomResizedCrop(size=crop_size[0] if len(crop_size) == 1 else crop_size,
+#                                           interpolation=3,
+#                                           scale=crop_scale, ratio=crop_ratio))
+        if not do_crop and do_pad:
             res.extend([T.Pad(padding_size, padding_mode=padding_mode),
                         T.RandomCrop(size_train[0] if len(size_train) == 1 else size_train)])
         if do_flip:
@@ -89,12 +94,21 @@ def build_transforms(cfg, is_train=True):
             res.append(RandomPatch(prob_happen=rpt_prob))
     else:
         size_test = cfg.INPUT.SIZE_TEST
-        do_crop = cfg.INPUT.CROP.ENABLED
-        crop_size = cfg.INPUT.CROP.SIZE
+        crop_prob = cfg.INPUT.CROP.PROB
+        test_crop = cfg.INPUT.CROP.TEST_ENABLED
+
+        if test_crop:
+            # if crop, do crop first
+            res.append(RandomCropForBody(crop_prob))
 
         if size_test[0] > 0:
-            res.append(T.Resize(size_test[0] if len(size_test) == 1 else size_test, interpolation=3))
-        if do_crop:
-            res.append(T.CenterCrop(size=crop_size[0] if len(crop_size) == 1 else crop_size))
+            res.append(T.Resize(size_test[0] if len(size_test) == 1 else size_test, interpolation=2))
+#        if do_crop:
+#            res.append(T.CenterCrop(size=crop_size[0] if len(crop_size) == 1 else crop_size))
         res.append(ToTensor())
+    res.append(T.Normalize(
+        mean=[0.485*255, 0.456*255, 0.406*255],
+        std=[0.229*255, 0.224*255, 0.225*255]
+        ))
+    print(res)
     return T.Compose(res)

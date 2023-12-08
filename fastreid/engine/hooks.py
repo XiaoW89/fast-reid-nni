@@ -7,6 +7,8 @@ import logging
 import os
 import tempfile
 import time
+import pdb
+import nni
 from collections import Counter
 
 import torch
@@ -370,18 +372,32 @@ class EvalHook(HookBase):
         # Evaluation may take different time among workers.
         # A barrier make them start the next iteration together.
         comm.synchronize()
+        return results
 
     def after_epoch(self):
         next_epoch = self.trainer.epoch + 1
         if self._period > 0 and next_epoch % self._period == 0:
-            self._do_eval()
+            results = self._do_eval()
+            weighted_rank1 = results['OccludedDuke']['Rank-1'] * 0.35 + results['Market1501']['Rank-1'] * 0.65
+            nni.report_intermediate_result({
+                'default': weighted_rank1,
+                'OccludedDuke': results['OccludedDuke']['Rank-1'],
+                'Market1501': results['Market1501']['Rank-1'],
+                })
 
     def after_train(self):
         next_epoch = self.trainer.epoch + 1
         # This condition is to prevent the eval from running after a failed training
         if next_epoch % self._period != 0 and next_epoch >= self.trainer.max_epoch:
-            self._do_eval()
-        # func is likely a closure that holds reference to the trainer
+            results = self._do_eval()
+            weighted_rank1 = results['OccludedDuke']['Rank-1'] * 0.35 + results['Market1501']['Rank-1'] * 0.65
+            nni.report_final_result({
+                'default': weighted_rank1,
+                'OccludedDuke': results['OccludedDuke']['Rank-1'],
+                'Market1501': results['Market1501']['Rank-1'],
+                })
+
+       # func is likely a closure that holds reference to the trainer
         # therefore we clean it to avoid circular reference in the end
         del self._func
 

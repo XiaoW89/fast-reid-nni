@@ -2,6 +2,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 
 import copy
+import pdb
 import logging
 import os
 from collections import defaultdict
@@ -229,6 +230,7 @@ class Checkpointer(object):
         # DataParallel or DistributedDataParallel during serialization,
         # remove the "module" prefix before performing the matching.
         _strip_prefix_if_present(checkpoint_state_dict, "module.")
+#        _append_prefix_if_present(checkpoint_state_dict, "backbone.")
 
         # work around https://github.com/pytorch/pytorch/issues/24139
         model_state_dict = self.model.state_dict()
@@ -412,6 +414,37 @@ def get_unexpected_parameters_message(keys: List[str]) -> str:
         "  " + colored(k + _group_to_str(v), "magenta") for k, v in groups.items()
     )
     return msg
+
+def _append_prefix_if_present(state_dict: Dict[str, Any], prefix: str) -> None:
+    """
+    Strip the prefix in metadata, if any.
+
+    Args:
+        state_dict (OrderedDict): a state-dict to be loaded to the model.
+        prefix (str): prefix.
+    """
+    keys = sorted(state_dict.keys())
+
+    for key in keys:
+        newkey = prefix + key
+        state_dict[newkey] = state_dict.pop(key)
+
+    # also strip the prefix in metadata, if any..
+    try:
+        metadata = state_dict._metadata  # pyre-ignore
+    except AttributeError:
+        pass
+    else:
+        for key in list(metadata.keys()):
+            # for the metadata dict, the key can be:
+            # '': for the DDP module, which we want to remove.
+            # 'module': for the actual model.
+            # 'module.xx.xx': for the rest.
+
+            if len(key) == 0:
+                continue
+            newkey = prefix + key
+            metadata[newkey] = metadata.pop(key)
 
 
 def _strip_prefix_if_present(state_dict: Dict[str, Any], prefix: str) -> None:

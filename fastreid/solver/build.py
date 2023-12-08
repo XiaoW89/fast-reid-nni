@@ -14,10 +14,12 @@ from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Type, Union
 
 import torch
+import pdb
 
 from fastreid.config import CfgNode
 from fastreid.utils.params import ContiguousParams
 from . import lr_scheduler
+from timm.utils.agc import adaptive_clip_grad
 
 _GradientClipperInput = Union[torch.Tensor, Iterable[torch.Tensor]]
 _GradientClipper = Callable[[_GradientClipperInput], None]
@@ -26,6 +28,7 @@ _GradientClipper = Callable[[_GradientClipperInput], None]
 class GradientClipType(Enum):
     VALUE = "value"
     NORM = "norm"
+    AGC = "agc"
 
 
 def _create_gradient_clipper(cfg: CfgNode) -> _GradientClipper:
@@ -40,10 +43,14 @@ def _create_gradient_clipper(cfg: CfgNode) -> _GradientClipper:
 
     def clip_grad_value(p: _GradientClipperInput):
         torch.nn.utils.clip_grad_value_(p, cfg.CLIP_VALUE)
+    def clip_grad_agc(p: _GradientClipperInput):
+        adaptive_clip_grad(p, cfg.CLIP_VALUE, cfg.NORM_TYPE)
+
 
     _GRADIENT_CLIP_TYPE_TO_CLIPPER = {
         GradientClipType.VALUE: clip_grad_value,
         GradientClipType.NORM: clip_grad_norm,
+        GradientClipType.AGC: clip_grad_agc,
     }
     return _GRADIENT_CLIP_TYPE_TO_CLIPPER[GradientClipType(cfg.CLIP_TYPE)]
 
@@ -319,7 +326,7 @@ def build_lr_scheduler(cfg, optimizer, iters_per_epoch):
         "MultiStepLR": {
             "optimizer": optimizer,
             # multi-step lr scheduler options
-            "milestones": cfg.SOLVER.STEPS,
+            "milestones": cfg.SOLVER.STEPS if isinstance(cfg.SOLVER.STEPS[0], int) else list(map(lambda x: int(x*max_epoch), cfg.SOLVER.STEPS)),
             "gamma": cfg.SOLVER.GAMMA,
         },
         "CosineAnnealingLR": {

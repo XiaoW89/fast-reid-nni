@@ -8,6 +8,7 @@ from . import losses
 from .backbones import (
     BACKBONE_REGISTRY,
     build_resnet_backbone,
+    build_elan_backbone,
     build_backbone,
 )
 from .heads import (

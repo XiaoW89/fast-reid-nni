@@ -149,13 +149,15 @@ _C.INPUT.SIZE_TRAIN = [256, 128]
 _C.INPUT.SIZE_TEST = [256, 128]
 
 # `True` if cropping is used for data augmentation during training
-_C.INPUT.CROP = CN({"ENABLED": False})
+_C.INPUT.CROP = CN({"ENABLED": False, "TEST_ENABLED": False})
 # Size of the image cropped
 _C.INPUT.CROP.SIZE = [224, 224]
 # Size of the origin size cropped
 _C.INPUT.CROP.SCALE = [0.16, 1]
 # Aspect ratio of the origin aspect ratio cropped
 _C.INPUT.CROP.RATIO = [3./4., 4./3.]
+_C.INPUT.CROP.PROB = 0.2
+
 
 # Random probability for image horizontal flip
 _C.INPUT.FLIP = CN({"ENABLED": False})
@@ -167,7 +169,7 @@ _C.INPUT.PADDING.MODE = 'constant'
 _C.INPUT.PADDING.SIZE = 10
 
 # Random color jitter
-_C.INPUT.CJ = CN({"ENABLED": False})
+_C.INPUT.CJ = CN({"ENABLED": False, "TEST_ENABLED": False})
 _C.INPUT.CJ.PROB = 0.5
 _C.INPUT.CJ.BRIGHTNESS = 0.15
 _C.INPUT.CJ.CONTRAST = 0.15

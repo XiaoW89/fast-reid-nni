@@ -377,6 +377,32 @@ def auto_augment_policy_v0(hparams):
     pc = [[AugmentOp(*a, hparams=hparams) for a in sp] for sp in policy]
     return pc
 
+def auto_augment_policy_reid(hparams):
+    # ImageNet v0 policy from TPU EfficientNet impl, cannot find a paper reference.
+    policy = [
+        [('Color', 0.4, 9), ('Equalize', 0.6, 3)],
+        [('Color', 0.4, 1), ('Rotate', 0.6, 8)],
+        [('Solarize', 0.8, 3), ('Equalize', 0.4, 7)],
+        [('Solarize', 0.4, 2), ('Solarize', 0.6, 2)],
+        [('Color', 0.2, 0), ('Equalize', 0.8, 8)],
+        [('Equalize', 0.4, 8), ('SolarizeAdd', 0.8, 3)],
+        [('Color', 0.6, 1), ('Equalize', 1.0, 2)],
+        [('Invert', 0.4, 9), ('Rotate', 0.6, 0)],
+        [('Color', 0.4, 7), ('Equalize', 0.6, 0)],
+        [('Posterize', 0.4, 6), ('AutoContrast', 0.4, 7)],
+        [('Solarize', 0.6, 8), ('Color', 0.6, 9)],
+        [('Solarize', 0.2, 4), ('Rotate', 0.8, 9)],
+        [('Rotate', 1.0, 7), ('TranslateYRel', 0.8, 9)],
+        [('Color', 1.0, 0), ('Rotate', 0.6, 2)],
+        [('Equalize', 0.8, 4), ('Equalize', 0.0, 8)],
+        [('Equalize', 1.0, 4), ('AutoContrast', 0.6, 2)],
+        [('Posterize', 0.8, 2), ('Solarize', 0.6, 10)],  # This results in black image with Tpu posterize
+        [('Solarize', 0.6, 8), ('Equalize', 0.6, 1)],
+        [('Color', 0.8, 6), ('Rotate', 0.4, 5)],
+    ]
+    pc = [[AugmentOp(*a, hparams=hparams) for a in sp] for sp in policy]
+    return pc
+
 
 def auto_augment_policy_v0r(hparams):
     # ImageNet v0 policy from TPU EfficientNet impl, with variation of Posterize used
@@ -488,14 +514,16 @@ def auto_augment_policy(name="original"):
         return auto_augment_policy_v0(hparams)
     elif name == 'v0r':
         return auto_augment_policy_v0r(hparams)
+    elif name == 'reid':
+        return auto_augment_policy_reid(hparams)
     else:
         assert False, 'Unknown AA policy (%s)' % name
 
 
 class AutoAugment:
 
-    def __init__(self):
-        self.policy = auto_augment_policy()
+    def __init__(self, policy_name):
+        self.policy = auto_augment_policy(policy_name)
 
     def __call__(self, img):
         sub_policy = random.choice(self.policy)

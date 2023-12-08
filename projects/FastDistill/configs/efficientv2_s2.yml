@@ -1,0 +1,53 @@
+_BASE_: Base-kd.yml
+
+MODEL:
+  BACKBONE:
+    NAME: build_efficientformerv2_backbone
+    FEAT_DIM: 288
+    WITH_IBN: False
+    PRETRAIN: True
+    PRETRAIN_PATH: "eformer_s2_450.pth"
+  LOSSES:
+    CE:
+      SCALE: 1.0
+
+
+INPUT:
+  SIZE_TRAIN: [ 224, 224 ]
+  SIZE_TEST: [ 224, 224 ]
+  AUTOAUG:
+    PROB: 0.33
+  REA:
+    ENABLED: True
+    PROB: 0.2
+
+SOLVER:
+  OPT: "AdamW"
+  MAX_EPOCH: 200
+  BASE_LR: 0.0005
+  IMS_PER_BATCH: 256
+
+  DELAY_EPOCHS: 0
+  FREEZE_ITERS: 4500
+  WEIGHT_DECAY: 5e-2
+  CHECKPOINT_PERIOD: 20
+
+    #  SCHED: "MultiStepLR" 
+    #  STEPS: [45, 100, 110]
+  WARMUP_ITERS: 4000
+  WARMUP_FACTOR: 1e-3
+    #STEPS: [4, 5, 6]
+
+    #CLIP_GRADIENTS:
+    #  ENABLED: True
+    #  CLIP_TYPE: 'agc'
+    #  CLIP_VALUE: 0.01
+
+DATASETS:
+  NAMES: ("DukeMTMC",)
+  TESTS: ("DukeMTMC",)
+
+TEST:
+  EVAL_PERIOD: 5
+
+OUTPUT_DIR: projects/FastDistill/logs/dukemtmc/efficientv2_s2_pretrain_tttt

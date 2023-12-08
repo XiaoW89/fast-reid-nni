@@ -4,17 +4,21 @@
 @contact: sherlockliao01@gmail.com
 """
 
-__all__ = ['ToTensor', 'RandomPatch', 'AugMix', ]
+__all__ = ['ToTensor', 'RandomPatch', 'AugMix', "RandomCropForBody"]
 
+import pdb
 import math
 import random
+import numbers
 from collections import deque
 
 import numpy as np
 import torch
 
-from .functional import to_tensor, augmentations
+from collections.abc import Sequence
 
+from .functional import to_tensor, augmentations
+import torchvision.transforms.functional  as F
 
 class ToTensor(object):
     """Convert a ``PIL Image`` or ``numpy.ndarray`` to tensor.
@@ -159,3 +163,48 @@ class AugMix(object):
 
         mixed = (1 - m) * image + m * mix
         return mixed.astype(np.uint8)
+
+class RandomCropForBody(torch.nn.Module):
+
+    def __init__(self, prob):
+        super().__init__()
+        self.prob = prob
+
+    def forward(self, img):
+        """
+        Args:
+            img (PIL Image or Tensor): Image to be cropped.
+
+        Returns:
+            PIL Image or Tensor: Cropped image.
+        """
+
+        width, height = F._get_image_size(img)
+        
+#        img.show()
+
+        r_min_x = 0. 
+        r_min_y = 0. 
+        r_width = 1. 
+        r_height = 1. 
+
+        if(np.random.rand() < self.prob):
+            r_min_x = np.random.uniform(0., 0.3, 1)
+            r_min_y = np.random.uniform(0., 0.05, 1)
+            r_width = np.random.uniform(0.6, 1.0-r_min_x, 1)
+            r_height = np.random.uniform(0.5, 1.0-r_min_y, 1)
+
+        lx = max(math.floor(r_min_x * width), 0)
+        ly = max(math.floor(r_min_y * height), 0)
+        ry = min(math.floor((r_min_y + r_height) * height)-1, height - 1)
+        rx = min(math.floor((r_min_x + r_width) * width)-1, width - 1)
+
+
+        cropped = F.crop(img, ly, lx, ry-ly+1, rx-lx+1)
+
+#        cropped.show()
+        return cropped
+
+
+
+

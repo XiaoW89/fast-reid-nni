@@ -4,6 +4,7 @@
 @contact: sherlockliao01@gmail.com
 """
 
+import pdb
 import torch
 from torch import nn
 
@@ -127,7 +128,7 @@ class Baseline(nn.Module):
         else:
             raise TypeError("batched_inputs must be dict or torch.Tensor, but get {}".format(type(batched_inputs)))
 
-        images.sub_(self.pixel_mean).div_(self.pixel_std)
+#        images.sub_(self.pixel_mean).div_(self.pixel_std)
         return images
 
     def losses(self, outputs, gt_labels):

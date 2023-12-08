@@ -1,0 +1,62 @@
+_BASE_: ../Base-SBS.yml
+
+MODEL:
+  BACKBONE:
+    NAME: "build_elan_backbone"
+    FEAT_DIM: 512
+      #  WEIGHTS: "logs/market1501/sbs_elan_96x32_GlobalAvgPool/model_best.pth"
+  HEADS:
+    POOL_LAYER: 'GlobalMaxPool'
+    EMBEDDING_DIM: 1024
+    MARGIN: 0.35
+    SCALE: 16
+  
+SOLVER:
+  IMS_PER_BATCH: 512
+  MAX_EPOCH: 401
+  BASE_LR: 0.0013926
+
+  OPT: "Adam"
+
+  DELAY_EPOCHS: 0
+  FREEZE_ITERS: 0
+  WEIGHT_DECAY: 0.0005089
+  CHECKPOINT_PERIOD: 40
+
+  SCHED: "MultiStepLR" 
+  STEPS: [0.8, 0.95]
+  WARMUP_ITERS: 5000
+  WARMUP_FACTOR: 1e-7
+    #STEPS: [4, 5, 6]
+
+    #CLIP_GRADIENTS:
+    #  ENABLED: True
+    #  CLIP_TYPE: 'agc'
+    #  CLIP_VALUE: 0.01
+
+INPUT:
+  SIZE_TRAIN: [96,32]
+  SIZE_TEST: [96,32]
+  AUTOAUG:
+    ENABLED: True
+    PROB: 0.2
+  REA:
+    ENABLED: True
+    PROB: 0.1
+  PADDING:
+    ENABLED: False
+  CROP:
+    ENABLED: True
+    PROB: 0.2
+  CJ:
+    ENABLED: False
+
+TEST:
+  EVAL_PERIOD: 40
+
+DATASETS:
+  NAMES: ("Market1501",)
+  TESTS: ("OccludedDuke", "Market1501", )
+
+OUTPUT_DIR: logs/market1501/sbs_elan_96x32_autoaug
+
