@@ -9,7 +9,6 @@ import os
 import argparse
 import io
 import sys
-import pdb
 
 import onnx
 import onnxoptimizer
@@ -119,23 +118,23 @@ def export_onnx_model(model, inputs):
                 model,
                 inputs,
                 f,
-                #operator_export_type=OperatorExportTypes.ONNX_ATEN_FALLBACK,
+                operator_export_type=OperatorExportTypes.ONNX_ATEN_FALLBACK,
                 # verbose=True,  # NOTE: uncomment this for debugging
                 # export_params=True,
+                input_names=['input'],
                 output_names=['feat'],
-                input_names=['input']
             )
             onnx_model = onnx.load_from_string(f.getvalue())
 
     logger.info("Completed convert of ONNX model")
 
     # Apply ONNX's Optimization
-#    logger.info("Beginning ONNX model path optimization")
-#    all_passes = onnxoptimizer.get_available_passes()
-#    passes = ["extract_constant_to_initializer", "eliminate_unused_initializer", "fuse_bn_into_conv"]
-#    assert all(p in all_passes for p in passes)
-#    onnx_model = onnxoptimizer.optimize(onnx_model, passes)
-#    logger.info("Completed ONNX model path optimization")
+    logger.info("Beginning ONNX model path optimization")
+    all_passes = onnxoptimizer.get_available_passes()
+    passes = ["extract_constant_to_initializer", "eliminate_unused_initializer", "fuse_bn_into_conv"]
+    assert all(p in all_passes for p in passes)
+    onnx_model = onnxoptimizer.optimize(onnx_model, passes)
+    logger.info("Completed ONNX model path optimization")
     return onnx_model
 
 
@@ -149,36 +148,22 @@ if __name__ == '__main__':
         cfg.MODEL.HEADS.POOL_LAYER = 'GlobalAvgPool'
     model = build_model(cfg)
     Checkpointer(model).load(cfg.MODEL.WEIGHTS)
-    
     if hasattr(model.backbone, 'deploy'):
         model.backbone.deploy(True)
     model.eval()
     logger.info(model)
 
     inputs = torch.randn(args.batch_size, 3, cfg.INPUT.SIZE_TEST[0], cfg.INPUT.SIZE_TEST[1]).to(model.device)
-    torch.onnx.export(
-        model,
-        inputs,
-        "elan.onnx",
-        training=torch.onnx.TrainingMode.EVAL,
-        #operator_export_type=OperatorExportTypes.ONNX_ATEN_FALLBACK,
-        # verbose=True,  # NOTE: uncomment this for debugging
-        #export_params=True,
-        output_names=['feat'],
-        input_names=['input']
-    )
- 
-#    onnx_model = export_onnx_model(model, inputs)
-#
-#    model_simp = onnx_model
-#    model_simp, check = simplify(onnx_model)
-#
-#    model_simp = remove_initializer_from_input(model_simp)
-#
-#    assert check, "Simplified ONNX model could not be validated"
-#
-#    PathManager.mkdirs(args.output)
-#
-#    save_path = os.path.join(args.output, args.name+'.onnx')
-#    onnx.save_model(model_simp, save_path)
-#    logger.info("ONNX model file has already saved to {}!".format(save_path))
+    onnx_model = export_onnx_model(model, inputs)
+
+    model_simp, check = simplify(onnx_model)
+
+    model_simp = remove_initializer_from_input(model_simp)
+
+    assert check, "Simplified ONNX model could not be validated"
+
+    PathManager.mkdirs(args.output)
+
+    save_path = os.path.join(args.output, args.name+'.onnx')
+    onnx.save_model(model_simp, save_path)
+    logger.info("ONNX model file has already saved to {}!".format(save_path))

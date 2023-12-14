@@ -16,14 +16,14 @@ from fastreid.engine import DefaultTrainer, default_argument_parser, default_set
 from fastreid.utils.checkpoint import Checkpointer
 
 params = {
-    'LR': 5e-3,
-    'WD': 5e-2,
-    'PoolType': 'GlobalMaxPool',
-    'BatchSize': 256,
-    'MaxEpoch': 10,
-    'Optimizer': 'AdamW',
-    'HeadMargin': 0.35,
-    'HeadScale': 64,
+    'SOLVER.BASE_LR': 5e-3,
+    'SOLVER.WEIGHT_DECAY': 5e-2,
+    'MODEL.HEADS.POOL_LAYER': 'GlobalMaxPool',
+    'SOLVER.IMS_PER_BATCH': 256,
+    'SOLVER.MAX_EPOCH': 10,
+    'SOLVER.OPT': 'AdamW',
+    'MODEL.HEADS.MARGIN': 0.35,
+    'MODEL.HEADS.SCALE': 64,
 }
 
 optimized_params = nni.get_next_parameter()
@@ -39,18 +39,13 @@ def setup(args):
     cfg.merge_from_list(args.opts)
     if args.nni_hpo:
         pid = os.getpid()
-        nni_param = [
-                'SOLVER.BASE_LR', params['LR'], 
-                'SOLVER.WEIGHT_DECAY', params['WD'],
-                'SOLVER.IMS_PER_BATCH', params['BatchSize'],
-                'MODEL.HEADS.POOL_LAYER', params['PoolType'],
-                'SOLVER.MAX_EPOCH', params['MaxEpoch'],
-                'SOLVER.OPT', params['Optimizer'],
-                'MODEL.HEADS.MARGIN', params['HeadMargin'],
-                'MODEL.HEADS.SCALE', params['HeadScale'],
-                'OUTPUT_DIR', cfg['OUTPUT_DIR'] + f"_{pid}", 
-                ]
-        cfg.merge_from_list(nni_param)
+        nni_params = []
+        for i in params: 
+            nni_params.append(i)
+            nni_params.append(params[i])
+        nni_params += [
+            'OUTPUT_DIR', cfg['OUTPUT_DIR'] + f"_{pid}"]
+        cfg.merge_from_list(nni_params)
     cfg.freeze()
     default_setup(cfg, args)
     return cfg
