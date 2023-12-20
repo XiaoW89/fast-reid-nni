@@ -179,7 +179,7 @@ class RandomCropForBody(torch.nn.Module):
             PIL Image or Tensor: Cropped image.
         """
 
-        width, height = F._get_image_size(img)
+        width, height = F.get_image_size(img)
         
 #        img.show()
 

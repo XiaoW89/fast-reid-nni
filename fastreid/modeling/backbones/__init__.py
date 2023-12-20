@@ -18,3 +18,4 @@ from .repvgg import build_repvgg_backbone
 from .vision_transformer import build_vit_backbone
 from .efficientformer_v2 import build_efficientformerv2_backbone
 from .elan import build_elan_backbone
+from .elan_nas import build_elan_nas_backbone

@@ -12,3 +12,4 @@ from .baseline import Baseline
 from .mgn import MGN
 from .moco import MoCo
 from .distiller import Distiller
+from .nas_baseline import NasBaseline

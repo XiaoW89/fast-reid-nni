@@ -1,14 +1,16 @@
-This repo is forked from https://github.com/JDAI-CV/fast-reid and provided some new features
+This repo is forked from https://github.com/JDAI-CV/fast-reid and provided some codes based on nni
 
 ## features
 * NNI-HPO
+* NNI-NAS
 
 ## TODO
-* NNI-NAS
 * NNI-MC
 
 ## Start a new HPO exp
 if you did't installed the nni package , you should install first (visit https://blog.csdn.net/wb3533366/article/details/134978044 for more details )
+
+
 `
 pip install nni
 `
@@ -18,6 +20,15 @@ then:
 `
 python nni_tune.py
 `  
+
+## Start a new NAS exp
+
+Multi-GPU is not supported
+
+`
+python nni_nas.py --config-file ./configs/Market1501/sbs_elan_nas.yml --num-gpus 1
+`  
+
 
 ## License
 

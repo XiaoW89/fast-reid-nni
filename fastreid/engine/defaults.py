@@ -51,6 +51,7 @@ def default_argument_parser():
     )
     parser.add_argument("--eval-only", action="store_true", help="perform evaluation only")
     parser.add_argument("--nni-hpo", action="store_true", help="perform nni hpo")
+    parser.add_argument("--nni-nas", action="store_true", help="perform nni nas")
     parser.add_argument("--num-gpus", type=int, default=1, help="number of gpus *per machine*")
     parser.add_argument("--num-machines", type=int, default=1, help="total number of machines")
     parser.add_argument(
@@ -260,6 +261,7 @@ class DefaultTrainer(TrainerBase):
             self.start_epoch = checkpoint.get("epoch", -1) + 1
             # The checkpoint stores the training iteration that just finished, thus we start
             # at the next iteration (or iter zero if there's no checkpoint).
+        return self.model
 
     def build_hooks(self):
         """
@@ -341,7 +343,7 @@ class DefaultTrainer(TrainerBase):
             TensorboardXWriter(self.cfg.OUTPUT_DIR),
         ]
 
-    def train(self):
+    def train(self,):
         """
         Run training.
         Returns:
