@@ -143,22 +143,21 @@ class ELANNas(nn.Module):
         self.maxpool = LayerChoice([nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True),
                                     nn.AvgPool2d(kernel_size=2, stride=2, ceil_mode=True),
                                     Conv(inp, inp, 3, 2, p=autopad(3), act=True),
-                                    ], label='pool1')
-#        self.cell1 = Cell(op_candidates=[nn.Conv2d(input_channel, input_channel, 3, padding=autopad(3)), 
-#                           nn.MaxPool2d(kernel_size=3, stride=1, padding=autopad(3)),
-#                           nn.Identity(),
-#                           nn.AvgPool2d(kernel_size=3, stride=1, padding=autopad(3)),
-#                           nn.Conv2d(input_channel, input_channel, 3, padding=autopad(3), dilation=3),
-#                           nn.Conv2d(input_channel, input_channel, 3, padding=autopad(3), dilation=5),
-#                           ], 
-#                          num_nodes=3,
-#                          num_ops_per_node=2,
-#                          num_predecessors=1,
-#                          merge_op='loose_end',
-#                          label='cell1'
-#                          )
-        #cell1_output_dim = len(self.cell1.output_node_indices) * input_channel
-        #inp = cell1_output_dim        
+                                    ], label='pool_1')
+        self.cell1 = Cell(op_candidates=[nn.Conv2d(input_channel, input_channel, 3, stride=1, padding=autopad(3)), 
+                           nn.MaxPool2d(kernel_size=3, stride=1, padding=autopad(3)),
+                           nn.AvgPool2d(kernel_size=3, stride=1, padding=autopad(3)),
+#                           nn.Conv2d(input_channel, input_channel, 3, stride=1, padding=3*(3-1)/2, dilation=3),
+#                           nn.Conv2d(input_channel, input_channel, 3, stride=1, padding=5*(3-1)/2, dilation=5),
+                           nn.Identity(),
+                           ], 
+                          num_nodes=3,
+                          num_ops_per_node=2,
+                          num_predecessors=1,
+                          merge_op='loose_end',
+                          label='cell_1'
+                          )
+        inp = len(self.cell1.output_node_indices) * input_channel
         self.layer1, inp = self._make_layer(elan_block_setting, 0, inp, num_block=1)
         self.layer2, inp = self._make_layer(elan_block_setting, 1, inp, num_block=1)
         self.layer3, inp = self._make_layer(elan_block_setting, 2, inp, num_block=1)
@@ -216,7 +215,7 @@ class ELANNas(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
-#        x = self.cell1(x)
+        x = self.cell1([x])
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
