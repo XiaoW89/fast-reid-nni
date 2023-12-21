@@ -1,14 +1,14 @@
-This repo is forked from https://github.com/JDAI-CV/fast-reid and provided some codes based on nni
+This repo is forked from https://github.com/JDAI-CV/fast-reid and provided some demo-codes based on NNI(https://github.com/microsoft/nni/)
 
 ## features
-* NNI-HPO
-* NNI-NAS
+* NNI-HPO , Hyperparameter Optimization
+* NNI-NAS, Neural Architecture Search
 
 ## TODO
-* NNI-MC
+* NNI-MC, Model Compression, Prune
 
 ## Start a new HPO exp
-if you did't installed the nni package , you should install first (visit https://blog.csdn.net/wb3533366/article/details/134978044 for more details )
+Firstly, you should install the nni package (visit https://blog.csdn.net/wb3533366/article/details/134978044 for more details )
 
 
 `
@@ -23,7 +23,7 @@ python nni_tune.py
 
 ## Start a new NAS exp
 
-Multi-GPU is not supported
+Multi-GPU is not supported now
 
 `
 python nni_nas.py --config-file ./configs/Market1501/sbs_elan_nas.yml --num-gpus 1
